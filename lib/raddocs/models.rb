@@ -1,24 +1,25 @@
 module Raddocs
   # Index page model
   class Index
-    def initialize(file)
+    def initialize(file, group = nil)
       @attrs = JSON.parse(File.read(file))
+      @group = group
     end
 
     # @return [Array] array of {Raddocs::Resource Resources}
     def resources
       @attrs.fetch("resources", {}).map do |resource|
-        Resource.new(resource["name"], resource["examples"])
+        Resource.new(resource["name"], resource["examples"], @group)
       end
     end
   end
 
   # Group of examples related to a specific resource, eg "Orders"
-  class Resource < Struct.new(:name, :examples)
+  class Resource < Struct.new(:name, :examples, :group)
     # @return [Array] array of {Raddocs::IndexExample IndexExamples}
     def examples
       @examples ||= super.map do |example|
-        IndexExample.new(example)
+        IndexExample.new(example, group)
       end
     end
   end
@@ -27,16 +28,22 @@ module Raddocs
   #
   # Has an extra link attribute that is required only on this page.
   class IndexExample
-    attr_reader :description, :link
+    attr_reader :description, :link, :group
 
-    def initialize(attributes)
+    def initialize(attributes, group = nil)
       @description = attributes.fetch("description")
       @link = attributes.fetch("link")
+      @group = group
     end
 
     # Link to example page is the same name as the file minus ".json"
     def href
-      link.gsub(".json", "")
+      base = link.gsub(".json", "")
+      if group
+        group + "/" + base
+      else
+        base
+      end
     end
   end
 

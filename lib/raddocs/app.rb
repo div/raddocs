@@ -10,6 +10,12 @@ module Raddocs
       haml :index, :locals => { :index => index }
     end
 
+    # Hardcoding groups for now
+    get Regexp.new("^\/(" + [:v1, :v2, :admin].join("|") + ")$") do
+      index = Index.new(File.join(docs_dir, params[:captures].first, "index.json"), params[:captures].first)
+      haml :index, :locals => { :index => index }
+    end
+
     # Allows for overriding styles
     get "/custom-css/*" do
       file = "#{docs_dir}/styles/#{params[:splat][0]}"
